@@ -48,6 +48,7 @@ stores/
 - Extend cube visualisation with heatmaps and time-travel timeline.
 - Wire anomaly alerts to Slack / Teams webhooks and ticketing workflows.
 - Harden auth & RBAC once integrated into production CMP portal.
+- Configure GitHub Secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`) to enable auto-deploy via the included workflow.
 
 ---
 
