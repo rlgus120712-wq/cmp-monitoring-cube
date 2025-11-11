@@ -1,7 +1,7 @@
 "use client"
 
 import NextDynamic from "next/dynamic"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { RefreshCcw } from "lucide-react"
 import { SummaryBar } from "@/components/SummaryBar"
@@ -10,15 +10,15 @@ import { mockFaces, mockSummary } from "@/lib/mockData"
 
 export const dynamic = "force-dynamic"
 
-const HolographicDeck = NextDynamic(
-  () => import("@/components/CubeScene").then((mod) => mod.CubeScene),
-  { ssr: false }
-)
-
 export default function DashboardPage() {
   const { setData } = useResourceStore((state) => ({
     setData: state.setData
   }))
+  const [isDeckReady, setDeckReady] = useState(false)
+
+  useEffect(() => {
+    import("@/components/CubeScene").then(() => setDeckReady(true))
+  }, [])
 
   useEffect(() => {
     setData(mockFaces, mockSummary)
@@ -43,10 +43,21 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative w-full overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 min-h-[520px] md:min-h-[680px] lg:min-h-[720px]">
-        <HolographicDeck />
+        {isDeckReady ? (
+          <ClientDeck />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-slate-500">
+            Initializing volumetric canvas…
+          </div>
+        )}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
       </div>
     </main>
   )
 }
+
+const ClientDeck = NextDynamic(
+  () => import("@/components/CubeScene").then((mod) => mod.CubeScene),
+  { ssr: false }
+)
 
