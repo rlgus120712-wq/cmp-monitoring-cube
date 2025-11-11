@@ -1,11 +1,20 @@
 "use client"
 
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Edges, Html, OrbitControls, PerspectiveCamera, useCursor } from "@react-three/drei"
+import {
+  Edges,
+  Html,
+  OrbitControls,
+  PerspectiveCamera,
+  Text,
+  useCursor
+} from "@react-three/drei"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
 import { useResourceStore } from "@/stores/resourceStore"
 import type { ResourceFace } from "@/lib/types"
+import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from "@react-three/postprocessing"
+import { Vector2 } from "three"
 
 const GRID_POSITIONS: [number, number, number][] = [
   [-3.6, -1.6, -3.6],
@@ -47,7 +56,13 @@ export function CubeScene() {
   const highlightFace = faces[0]
 
   return (
-    <Canvas shadows dpr={[1, 1.5]}>
+    <Canvas
+      shadows
+      dpr={[1, 1.5]}
+      onCreated={({ scene }) => {
+        scene.fog = new THREE.FogExp2("#020817", 0.06)
+      }}
+    >
       <color attach="background" args={["#020617"]} />
       <PerspectiveCamera makeDefault position={[8, 7, 10]} fov={42} />
       <ambientLight intensity={0.45} />
@@ -56,9 +71,19 @@ export function CubeScene() {
       <spotLight position={[0, 14, 0]} intensity={0.5} angle={0.35} penumbra={0.8} />
 
       {/* Base platform */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.2, 0]} receiveShadow>
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#010b1f" />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.1, 0]} receiveShadow>
+        <planeGeometry args={[34, 34]} />
+        <meshPhysicalMaterial color="#010b1f" roughness={0.85} metalness={0.15} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]} receiveShadow>
+        <planeGeometry args={[22, 22]} />
+        <meshPhysicalMaterial
+          color="#03112d"
+          emissive="#0b3b73"
+          emissiveIntensity={0.6}
+          metalness={0.4}
+          roughness={0.3}
+        />
       </mesh>
 
       {/* Outer glass volume */}
@@ -99,6 +124,17 @@ export function CubeScene() {
         dampingFactor={0.08}
         rotateSpeed={0.55}
       />
+
+      <EffectComposer multisampling={0}>
+        <Bloom intensity={0.45} luminanceThreshold={0.2} luminanceSmoothing={0.15} />
+        <ChromaticAberration
+          offset={new Vector2(0.0008, 0.0006)}
+          radialModulation
+          modulationOffset={0.2}
+        />
+        <Noise opacity={0.04} />
+        <Vignette eskil={false} offset={0.4} darkness={0.6} />
+      </EffectComposer>
     </Canvas>
   )
 }
@@ -129,21 +165,38 @@ function DomainCube({ face, position, palette, isHovered, onHover, onLeave }: Do
     >
       <mesh scale={isHovered ? 1.1 : 1} castShadow receiveShadow>
         <boxGeometry args={[2.2, 2.2, 2.2]} />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color={palette.base}
-          roughness={0.32}
-          metalness={0.55}
+          roughness={0.22}
+          metalness={0.5}
+          clearcoat={0.7}
+          clearcoatRoughness={0.15}
+          transmission={0.15}
+          thickness={0.4}
           emissive={palette.glow}
-          emissiveIntensity={isHovered ? 0.25 : 0.12}
+          emissiveIntensity={isHovered ? 0.4 : 0.18}
         />
         <Edges color={palette.glow} />
       </mesh>
 
-      <Html position={[0, -2.2, 0]} center>
-        <div className="rounded-full border border-slate-600/40 bg-slate-950/70 px-4 py-2 text-[11px] uppercase tracking-[0.35em] text-slate-200 backdrop-blur">
-          {face.title}
-        </div>
-      </Html>
+      {isHovered ? (
+        <Html position={[0, -2.4, 0]} center>
+          <div className="rounded-full border border-slate-600/40 bg-slate-950/80 px-4 py-2 text-[10px] uppercase tracking-[0.35em] text-slate-100 backdrop-blur">
+            {face.title}
+          </div>
+        </Html>
+      ) : null}
+
+      <Text
+        position={[0, -2.4, 0]}
+        fontSize={0.45}
+        color="#7dd3fc"
+        anchorX="center"
+        anchorY="top"
+        visible={!isHovered}
+      >
+        {face.title}
+      </Text>
     </group>
   )
 }
@@ -168,12 +221,16 @@ function FloatingCube({ face }: { face?: ResourceFace }) {
     <group>
       <mesh ref={ref} position={[0, 2.2, 0]} castShadow>
         <boxGeometry args={[3.4, 3.4, 3.4]} />
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           color={palette.base}
-          roughness={0.25}
-          metalness={0.5}
+          roughness={0.18}
+          metalness={0.45}
+          clearcoat={0.8}
+          clearcoatRoughness={0.1}
+          transmission={0.25}
+          thickness={0.6}
           emissive={palette.glow}
-          emissiveIntensity={0.3}
+          emissiveIntensity={0.4}
         />
         <Edges color={palette.glow} />
       </mesh>

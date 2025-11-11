@@ -35,7 +35,7 @@ export default function DashboardPage() {
         </motion.button>
       </div>
 
-      <div className="relative h-[640px] w-full overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <div className="relative w-full overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 min-h-[520px] md:min-h-[680px] lg:min-h-[720px]">
         <CubeScene />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
       </div>
