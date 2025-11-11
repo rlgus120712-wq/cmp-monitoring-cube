@@ -1,13 +1,7 @@
 "use client"
 
 import { Canvas } from "@react-three/fiber"
-import {
-  Edges,
-  Html,
-  OrbitControls,
-  PerspectiveCamera,
-  Stats
-} from "@react-three/drei"
+import { Edges, Html, OrbitControls, PerspectiveCamera, Stats, useCursor } from "@react-three/drei"
 import { motion } from "framer-motion"
 import { useMemo } from "react"
 import { useResourceStore } from "@/stores/resourceStore"
@@ -73,88 +67,17 @@ export function CubeScene() {
             const palette = categoryPalette[face.category]
 
             return (
-              <group
+              <DomainCube
                 key={face.id}
+                face={face}
                 position={position}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  selectFace(face.id)
-                }}
-                onPointerOver={(event) => {
-                  event.stopPropagation()
-                  setHoveredFace(face.id)
-                }}
-                onPointerOut={(event) => {
-                  event.stopPropagation()
-                  setHoveredFace(null)
-                }}
-                cursor="pointer"
-              >
-                <mesh scale={isActive ? 1.35 : isHovered ? 1.25 : 1.15} castShadow receiveShadow>
-                  <boxGeometry args={[1.6, 1.6, 1.6]} />
-                  <meshStandardMaterial
-                    color={palette.base}
-                    metalness={0.35}
-                    roughness={0.4}
-                    emissive={palette.glow}
-                    emissiveIntensity={isActive ? 0.24 : isHovered ? 0.16 : 0.08}
-                  />
-                  <Edges color={palette.glow} />
-                </mesh>
-
-                <Html position={[0, 1.6, 0]} center>
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="flex w-48 flex-col gap-2 rounded-2xl border border-slate-600/50 bg-slate-950/75 px-4 py-3 text-left shadow-lg backdrop-blur"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
-                        {face.category}
-                      </span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${getHealthBadgeClass(face.health)}`}
-                      >
-                        {face.health}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-100">{face.title}</p>
-                      <p className="text-xs text-slate-400">{face.subtitle}</p>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-slate-300">
-                      <span>
-                        $
-                        {face.cost.current.toLocaleString("en-US", {
-                          maximumFractionDigits: 0
-                        })}
-                      </span>
-                      <span
-                        className={
-                          face.cost.deltaPercent >= 0 ? "text-sky-300" : "text-emerald-300"
-                        }
-                      >
-                        {face.cost.deltaPercent >= 0 ? "+" : ""}
-                        {face.cost.deltaPercent.toFixed(1)}%
-                      </span>
-                    </div>
-                  </motion.div>
-                </Html>
-
-                {isHovered ? (
-                  <Html position={[0, -1.2, 0]} center>
-                    <div className="rounded-xl border border-slate-600/40 bg-slate-900/80 px-3 py-2 text-[10px] text-slate-300 shadow-lg backdrop-blur">
-                      <p className="uppercase tracking-[0.35em] text-slate-500">
-                        signal
-                      </p>
-                      <p className="mt-1 text-xs text-slate-200">
-                        {face.insights[0]?.title ?? "No open insights"}
-                      </p>
-                    </div>
-                  </Html>
-                ) : null}
-              </group>
+                palette={palette}
+                isActive={isActive}
+                isHovered={isHovered}
+                onSelect={() => selectFace(face.id)}
+                onHover={() => setHoveredFace(face.id)}
+                onLeave={() => setHoveredFace(null)}
+              />
             )
           })}
         </group>
@@ -192,5 +115,106 @@ function getHealthBadgeClass(health: ResourceFace["health"]) {
     default:
       return "border-slate-500/30 text-slate-200"
   }
+}
+
+interface DomainCubeProps {
+  face: ResourceFace
+  position: [number, number, number]
+  palette: { base: string; glow: string }
+  isActive: boolean
+  isHovered: boolean
+  onSelect: () => void
+  onHover: () => void
+  onLeave: () => void
+}
+
+function DomainCube({
+  face,
+  position,
+  palette,
+  isActive,
+  isHovered,
+  onSelect,
+  onHover,
+  onLeave
+}: DomainCubeProps) {
+  useCursor(isActive || isHovered)
+
+  return (
+    <group
+      position={position}
+      onClick={(event) => {
+        event.stopPropagation()
+        onSelect()
+      }}
+      onPointerOver={(event) => {
+        event.stopPropagation()
+        onHover()
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation()
+        onLeave()
+      }}
+    >
+      <mesh scale={isActive ? 1.35 : isHovered ? 1.25 : 1.15} castShadow receiveShadow>
+        <boxGeometry args={[1.6, 1.6, 1.6]} />
+        <meshStandardMaterial
+          color={palette.base}
+          metalness={0.35}
+          roughness={0.4}
+          emissive={palette.glow}
+          emissiveIntensity={isActive ? 0.24 : isHovered ? 0.16 : 0.08}
+        />
+        <Edges color={palette.glow} />
+      </mesh>
+
+      <Html position={[0, 1.6, 0]} center>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="flex w-48 flex-col gap-2 rounded-2xl border border-slate-600/50 bg-slate-950/75 px-4 py-3 text-left shadow-lg backdrop-blur"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+              {face.category}
+            </span>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${getHealthBadgeClass(face.health)}`}
+            >
+              {face.health}
+            </span>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-100">{face.title}</p>
+            <p className="text-xs text-slate-400">{face.subtitle}</p>
+          </div>
+          <div className="flex items-center justify-between text-xs text-slate-300">
+            <span>
+              $
+              {face.cost.current.toLocaleString("en-US", {
+                maximumFractionDigits: 0
+              })}
+            </span>
+            <span className={face.cost.deltaPercent >= 0 ? "text-sky-300" : "text-emerald-300"}>
+              {face.cost.deltaPercent >= 0 ? "+" : ""}
+              {face.cost.deltaPercent.toFixed(1)}%
+            </span>
+          </div>
+        </motion.div>
+      </Html>
+
+      {isHovered ? (
+        <Html position={[0, -1.2, 0]} center>
+          <div className="rounded-xl border border-slate-600/40 bg-slate-900/80 px-3 py-2 text-[10px] text-slate-300 shadow-lg backdrop-blur">
+            <p className="uppercase tracking-[0.35em] text-slate-500">signal</p>
+            <p className="mt-1 text-xs text-slate-200">
+              {face.insights[0]?.title ?? "No open insights"}
+            </p>
+          </div>
+        </Html>
+      ) : null}
+    </group>
+  )
 }
 
