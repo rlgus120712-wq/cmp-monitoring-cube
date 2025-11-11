@@ -109,7 +109,16 @@ export function CubeScene() {
         />
       ))}
 
-      <OrbitControls enablePan={false} enableZoom={false} dampingFactor={0.08} rotateSpeed={0.48} />
+      <OrbitControls
+        enablePan={false}
+        enableZoom={false}
+        dampingFactor={0.1}
+        rotateSpeed={0.42}
+        minAzimuthAngle={-Math.PI / 4}
+        maxAzimuthAngle={Math.PI / 4}
+        minPolarAngle={Math.PI / 2.4}
+        maxPolarAngle={Math.PI / 2.4}
+      />
 
       <EffectComposer multisampling={0}>
         <Bloom intensity={0.42} luminanceThreshold={0.18} luminanceSmoothing={0.16} />
