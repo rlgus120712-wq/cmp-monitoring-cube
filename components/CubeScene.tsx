@@ -36,15 +36,6 @@ export function CubeScene() {
     [faces]
   )
 
-  const pulseRef = useRef<THREE.Mesh>(null)
-  useFrame(({ clock }) => {
-    if (!pulseRef.current) return
-    const t = clock.elapsedTime
-    const scale = CORE_RADIUS + Math.sin(t * 2) * 0.18
-    pulseRef.current.scale.set(scale, scale, scale)
-    ;(pulseRef.current.material as THREE.MeshBasicMaterial).opacity = 0.22 + Math.sin(t * 2) * 0.07
-  })
-
   return (
     <Canvas
       shadows
@@ -94,10 +85,7 @@ export function CubeScene() {
             thickness={1}
           />
         </mesh>
-        <mesh ref={pulseRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.55, 0]}>
-          <ringGeometry args={[CORE_RADIUS * 0.5, CORE_RADIUS + 0.25, 96]} />
-          <meshBasicMaterial color="#60a5fa" transparent opacity={0.2} />
-        </mesh>
+        <CorePulse radius={CORE_RADIUS} />
         <Html position={[0, 2.3, 0]} center>
           <div className="rounded-full border border-sky-500/40 bg-slate-950/80 px-5 py-2 text-xs uppercase tracking-[0.45em] text-sky-200 backdrop-blur">
             Okestro Core
@@ -221,6 +209,25 @@ function OrbitNode({
         </Text>
       )}
     </group>
+  )
+}
+
+function CorePulse({ radius }: { radius: number }) {
+  const pulseRef = useRef<THREE.Mesh>(null)
+
+  useFrame(({ clock }) => {
+    if (!pulseRef.current) return
+    const t = clock.elapsedTime
+    const scale = radius + Math.sin(t * 2) * 0.18
+    pulseRef.current.scale.set(scale, scale, scale)
+    ;(pulseRef.current.material as THREE.MeshBasicMaterial).opacity = 0.22 + Math.sin(t * 2) * 0.07
+  })
+
+  return (
+    <mesh ref={pulseRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.55, 0]}>
+      <ringGeometry args={[radius * 0.5, radius + 0.25, 96]} />
+      <meshBasicMaterial color="#60a5fa" transparent opacity={0.2} />
+    </mesh>
   )
 }
 
