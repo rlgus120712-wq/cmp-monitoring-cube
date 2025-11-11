@@ -1,7 +1,7 @@
 "use client"
 
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Html, OrbitControls, PerspectiveCamera, Text, useCursor } from "@react-three/drei"
+import { Html, OrbitControls, PerspectiveCamera, Text } from "@react-three/drei"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
 import { Vector2 } from "three"
@@ -175,8 +175,6 @@ function OrbitNode({
       groupRef.current.rotation.y = -angle + Math.PI / 2
     }
   })
-
-  useCursor(isHovered)
 
   return (
     <group
