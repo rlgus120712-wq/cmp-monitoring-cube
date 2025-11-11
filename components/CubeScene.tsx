@@ -8,15 +8,15 @@ import { useResourceStore } from "@/stores/resourceStore"
 import type { ResourceFace } from "@/lib/types"
 
 const GRID_POSITIONS: [number, number, number][] = [
-  [-2.4, -1.2, -2.4],
-  [0, -1.2, -2.4],
-  [2.4, -1.2, -2.4],
-  [-2.4, -1.2, 0],
-  [0, -1.2, 0],
-  [2.4, -1.2, 0],
-  [-2.4, -1.2, 2.4],
-  [0, -1.2, 2.4],
-  [2.4, -1.2, 2.4]
+  [-3.6, -1.6, -3.6],
+  [0, -1.6, -3.6],
+  [3.6, -1.6, -3.6],
+  [-3.6, -1.6, 0],
+  [0, -1.6, 0],
+  [3.6, -1.6, 0],
+  [-3.6, -1.6, 3.6],
+  [0, -1.6, 3.6],
+  [3.6, -1.6, 3.6]
 ]
 
 const categoryPalette: Record<ResourceFace["category"], { base: string; glow: string }> = {
@@ -49,9 +49,9 @@ export function CubeScene() {
   return (
     <Canvas shadows dpr={[1, 1.5]}>
       <color attach="background" args={["#020617"]} />
-      <PerspectiveCamera makeDefault position={[10, 8, 12]} fov={46} />
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 12, 8]} intensity={1.2} castShadow color="#60a5fa" />
+      <PerspectiveCamera makeDefault position={[8, 7, 10]} fov={42} />
+      <ambientLight intensity={0.45} />
+      <directionalLight position={[12, 14, 10]} intensity={1.35} castShadow color="#60a5fa" />
       <directionalLight position={[-8, 10, -12]} intensity={0.4} color="#c084fc" />
       <spotLight position={[0, 14, 0]} intensity={0.5} angle={0.35} penumbra={0.8} />
 
@@ -76,7 +76,7 @@ export function CubeScene() {
       </mesh>
 
       {/* Base grid cubes */}
-      <group rotation={[-0.35, 0.6, 0]}>
+      <group rotation={[-0.25, 0.6, 0]} scale={1.6}>
         {gridCubes.map(({ face, position }) => (
           <DomainCube
             key={face.id}
@@ -97,7 +97,7 @@ export function CubeScene() {
         enableZoom={false}
         enableRotate
         dampingFactor={0.08}
-        rotateSpeed={0.6}
+        rotateSpeed={0.55}
       />
     </Canvas>
   )
@@ -127,20 +127,20 @@ function DomainCube({ face, position, palette, isHovered, onHover, onLeave }: Do
         onLeave()
       }}
     >
-      <mesh scale={isHovered ? 1.15 : 1} castShadow receiveShadow>
-        <boxGeometry args={[1.4, 1.4, 1.4]} />
+      <mesh scale={isHovered ? 1.1 : 1} castShadow receiveShadow>
+        <boxGeometry args={[2.2, 2.2, 2.2]} />
         <meshStandardMaterial
           color={palette.base}
-          roughness={0.35}
-          metalness={0.5}
+          roughness={0.32}
+          metalness={0.55}
           emissive={palette.glow}
           emissiveIntensity={isHovered ? 0.25 : 0.12}
         />
         <Edges color={palette.glow} />
       </mesh>
 
-      <Html position={[0, -1.4, 0]} center>
-        <div className="rounded-full border border-slate-600/40 bg-slate-950/70 px-3 py-1 text-[10px] uppercase tracking-[0.35em] text-slate-300 backdrop-blur">
+      <Html position={[0, -2.2, 0]} center>
+        <div className="rounded-full border border-slate-600/40 bg-slate-950/70 px-4 py-2 text-[11px] uppercase tracking-[0.35em] text-slate-200 backdrop-blur">
           {face.title}
         </div>
       </Html>
@@ -166,8 +166,8 @@ function FloatingCube({ face }: { face?: ResourceFace }) {
 
   return (
     <group>
-      <mesh ref={ref} position={[0, 1.6, 0]} castShadow>
-        <boxGeometry args={[2.2, 2.2, 2.2]} />
+      <mesh ref={ref} position={[0, 2.2, 0]} castShadow>
+        <boxGeometry args={[3.4, 3.4, 3.4]} />
         <meshStandardMaterial
           color={palette.base}
           roughness={0.25}
@@ -177,8 +177,8 @@ function FloatingCube({ face }: { face?: ResourceFace }) {
         />
         <Edges color={palette.glow} />
       </mesh>
-      <Html position={[0, 3.4, 0]} center>
-        <div className="rounded-full border border-slate-600/40 bg-slate-950/70 px-4 py-1 text-xs uppercase tracking-[0.4em] text-slate-200 backdrop-blur">
+      <Html position={[0, 4.4, 0]} center>
+        <div className="rounded-full border border-slate-600/40 bg-slate-950/80 px-5 py-2 text-sm uppercase tracking-[0.4em] text-slate-100 backdrop-blur">
           {face.title}
         </div>
       </Html>
