@@ -73,20 +73,34 @@ export function CubeScene() {
 
       {/* Core column */}
       <group>
-        <mesh position={[0, 0.3, 0]} castShadow>
-          <cylinderGeometry args={[CORE_RADIUS * 0.55, CORE_RADIUS * 0.55, 3, 48]} />
+        <mesh castShadow position={[0, 0.3, 0]}>
+          <torusGeometry args={[CORE_RADIUS * 0.45, 0.18, 32, 120]} />
           <meshPhysicalMaterial
-            color="#1d4ed8"
-            emissive="#4f9cff"
+            color="#143a6f"
+            emissive="#3b82f6"
             emissiveIntensity={0.55}
             metalness={0.45}
-            roughness={0.18}
+            roughness={0.2}
+            clearcoat={0.7}
+            clearcoatRoughness={0.3}
             transmission={0.25}
-            thickness={1}
+            thickness={0.6}
+          />
+        </mesh>
+        <mesh castShadow position={[0, 0.05, 0]}>
+          <cylinderGeometry args={[CORE_RADIUS * 0.18, CORE_RADIUS * 0.18, 0.6, 48]} />
+          <meshPhysicalMaterial
+            color="#2563eb"
+            emissive="#60a5fa"
+            emissiveIntensity={0.55}
+            metalness={0.35}
+            roughness={0.22}
+            transmission={0.35}
+            thickness={0.8}
           />
         </mesh>
         <CorePulse radius={CORE_RADIUS} />
-        <Html position={[0, 2.3, 0]} center>
+        <Html position={[0, 1.6, 0]} center>
           <div className="rounded-full border border-sky-500/40 bg-slate-950/80 px-5 py-2 text-xs uppercase tracking-[0.45em] text-sky-200 backdrop-blur">
             Okestro Core
           </div>
