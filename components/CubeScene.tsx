@@ -1,157 +1,181 @@
 "use client"
 
 import { Canvas } from "@react-three/fiber"
-import { Edges, Html, OrbitControls, PerspectiveCamera } from "@react-three/drei"
+import {
+  Edges,
+  Html,
+  OrbitControls,
+  PerspectiveCamera,
+  Stats
+} from "@react-three/drei"
 import { motion } from "framer-motion"
 import { useMemo } from "react"
 import { useResourceStore } from "@/stores/resourceStore"
 import type { ResourceFace } from "@/lib/types"
 
-const faceLayout: Record<
-  string,
-  { position: [number, number, number]; rotation: [number, number, number] }
+const GRID_POSITIONS: [number, number, number][] = [
+  [-3.5, 1.4, 0],
+  [-1.1, 1.4, 0],
+  [1.3, 1.4, 0],
+  [-3.5, -1.1, 0],
+  [-1.1, -1.1, 0],
+  [1.3, -1.1, 0]
+]
+
+const categoryPalette: Record<
+  ResourceFace["category"],
+  { base: string; glow: string }
 > = {
-  front: { position: [0, 0, 1.02], rotation: [0, 0, 0] },
-  back: { position: [0, 0, -1.02], rotation: [0, Math.PI, 0] },
-  top: { position: [0, 1.02, 0], rotation: [-Math.PI / 2, 0, 0] },
-  bottom: { position: [0, -1.02, 0], rotation: [Math.PI / 2, 0, 0] },
-  left: { position: [-1.02, 0, 0], rotation: [0, Math.PI / 2, 0] },
-  right: { position: [1.02, 0, 0], rotation: [0, -Math.PI / 2, 0] }
+  compute: { base: "#1d4ed8", glow: "#60a5fa" },
+  storage: { base: "#0369a1", glow: "#38bdf8" },
+  network: { base: "#7c3aed", glow: "#c084fc" },
+  security: { base: "#c026d3", glow: "#f472b6" },
+  finops: { base: "#047857", glow: "#34d399" },
+  platform: { base: "#0ea5e9", glow: "#67e8f9" }
 }
-
-const colorByHealth: Record<ResourceFace["health"], string> = {
-  normal: "#0ea5e9",
-  warning: "#f59e0b",
-  critical: "#f97316"
-}
-
-const faceOrder = ["front", "back", "top", "bottom", "left", "right"]
 
 export function CubeScene() {
-  const { faces, selectedFaceId, selectFace } = useResourceStore((state) => ({
-    faces: state.faces,
-    selectedFaceId: state.selectedFaceId,
-    selectFace: state.selectFace
-  }))
+  const { faces, selectedFaceId, selectFace, hoveredFaceId, setHoveredFace } =
+    useResourceStore((state) => ({
+      faces: state.faces,
+      selectedFaceId: state.selectedFaceId,
+      selectFace: state.selectFace,
+      hoveredFaceId: state.hoveredFaceId,
+      setHoveredFace: state.setHoveredFace
+    }))
 
-  const arrangedFaces = useMemo(() => {
-    if (faces.length === 0) {
-      return []
-    }
-
-    return faces.map((face, index) => {
-      const layoutKey = faceOrder[index % faceOrder.length]
-      return {
-        ...face,
-        layoutKey
-      }
-    })
+  const cubes = useMemo(() => {
+    return faces.map((face, index) => ({
+      face,
+      position: GRID_POSITIONS[index % GRID_POSITIONS.length]
+    }))
   }, [faces])
 
   return (
-    <div className="glass-panel relative flex-1 overflow-hidden min-h-[420px]">
-      <Canvas style={{ height: "100%", width: "100%" }} shadows>
-        <PerspectiveCamera makeDefault position={[4.2, 3.2, 4.2]} fov={48} />
-        <ambientLight intensity={0.4} />
+    <div className="glass-panel relative min-h-[520px] overflow-hidden">
+      <Canvas style={{ height: "100%", width: "100%" }} shadows dpr={[1, 1.5]}>
+        <color attach="background" args={["#020617"]} />
+        <PerspectiveCamera makeDefault position={[8, 6, 10]} fov={46} />
+        <ambientLight intensity={0.45} />
         <directionalLight
-          position={[5, 5, 5]}
+          position={[8, 12, 6]}
           intensity={1.2}
           castShadow
           color="#38bdf8"
         />
-        <directionalLight position={[-4, -2, -4]} intensity={0.3} color="#818cf8" />
-        <pointLight position={[0, 4, 0]} intensity={0.7} />
+        <directionalLight position={[-6, 8, -8]} intensity={0.55} color="#a855f7" />
+        <spotLight position={[0, 12, 0]} intensity={0.6} angle={0.3} penumbra={0.8} />
 
-        <group rotation={[0.4, 0.6, 0]}>
-          <mesh castShadow receiveShadow>
-            <boxGeometry args={[2.2, 2.2, 2.2]} />
-            <meshStandardMaterial
-              color="#0f172a"
-              metalness={0.3}
-              roughness={0.8}
-              transparent
-              opacity={0.9}
-            />
-            <Edges color="#38bdf8" />
-          </mesh>
-
-          {arrangedFaces.map((face) => {
-            const { layoutKey } = face
-            const layout = faceLayout[layoutKey]
+        <group rotation={[-0.35, 0.55, 0]}>
+          {cubes.map(({ face, position }) => {
             const isActive = face.id === selectedFaceId
+            const isHovered = face.id === hoveredFaceId
+            const palette = categoryPalette[face.category]
+
             return (
-              <Html
+              <group
                 key={face.id}
-                position={layout.position}
-                rotation={layout.rotation}
-                transform
-                occlude
-                distanceFactor={1.2}
+                position={position}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  selectFace(face.id)
+                }}
+                onPointerOver={(event) => {
+                  event.stopPropagation()
+                  setHoveredFace(face.id)
+                }}
+                onPointerOut={(event) => {
+                  event.stopPropagation()
+                  setHoveredFace(null)
+                }}
+                cursor="pointer"
               >
-                <motion.button
-                  onClick={() => selectFace(face.id)}
-                  whileHover={{ scale: 1.05 }}
-                  animate={{
-                    scale: isActive ? 1.08 : 1,
-                    boxShadow: isActive
-                      ? "0px 0px 32px rgba(56, 189, 248, 0.35)"
-                      : "0px 0px 16px rgba(15, 23, 42, 0.6)"
-                  }}
-                  className="w-56 rounded-2xl border border-slate-800/70 bg-slate-900/70 p-4 text-left backdrop-blur"
-                  style={{
-                    borderColor: `${colorByHealth[face.health]}55`
-                  }}
-                >
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
-                    {face.title}
-                  </p>
-                  <p className="text-sm font-semibold text-slate-100">
-                    {face.subtitle}
-                  </p>
-                  <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-lg font-semibold text-slate-50">
-                      $
-                      {face.cost.current.toLocaleString("en-US", {
-                        maximumFractionDigits: 0
-                      })}
-                    </span>
-                    <span
-                      className={`text-xs ${
-                        face.cost.deltaPercent >= 0 ? "text-sky-400" : "text-emerald-400"
-                      }`}
-                    >
-                      {face.cost.deltaPercent >= 0 ? "+" : ""}
-                      {face.cost.deltaPercent.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs">
-                    <span className="text-slate-300">
-                      Utilisation {face.utilisation.value}%
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${getHealthBadgeClass(face.health)}`}
-                    >
-                      {face.health.toUpperCase()}
-                    </span>
-                  </div>
-                </motion.button>
-              </Html>
+                <mesh scale={isActive ? 1.35 : isHovered ? 1.25 : 1.15} castShadow receiveShadow>
+                  <boxGeometry args={[1.6, 1.6, 1.6]} />
+                  <meshStandardMaterial
+                    color={palette.base}
+                    metalness={0.35}
+                    roughness={0.4}
+                    emissive={palette.glow}
+                    emissiveIntensity={isActive ? 0.24 : isHovered ? 0.16 : 0.08}
+                  />
+                  <Edges color={palette.glow} />
+                </mesh>
+
+                <Html position={[0, 1.6, 0]} center>
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex w-48 flex-col gap-2 rounded-2xl border border-slate-600/50 bg-slate-950/75 px-4 py-3 text-left shadow-lg backdrop-blur"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500">
+                        {face.category}
+                      </span>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${getHealthBadgeClass(face.health)}`}
+                      >
+                        {face.health}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">{face.title}</p>
+                      <p className="text-xs text-slate-400">{face.subtitle}</p>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span>
+                        $
+                        {face.cost.current.toLocaleString("en-US", {
+                          maximumFractionDigits: 0
+                        })}
+                      </span>
+                      <span
+                        className={
+                          face.cost.deltaPercent >= 0 ? "text-sky-300" : "text-emerald-300"
+                        }
+                      >
+                        {face.cost.deltaPercent >= 0 ? "+" : ""}
+                        {face.cost.deltaPercent.toFixed(1)}%
+                      </span>
+                    </div>
+                  </motion.div>
+                </Html>
+
+                {isHovered ? (
+                  <Html position={[0, -1.2, 0]} center>
+                    <div className="rounded-xl border border-slate-600/40 bg-slate-900/80 px-3 py-2 text-[10px] text-slate-300 shadow-lg backdrop-blur">
+                      <p className="uppercase tracking-[0.35em] text-slate-500">
+                        signal
+                      </p>
+                      <p className="mt-1 text-xs text-slate-200">
+                        {face.insights[0]?.title ?? "No open insights"}
+                      </p>
+                    </div>
+                  </Html>
+                ) : null}
+              </group>
             )
           })}
         </group>
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
-          <planeGeometry args={[20, 20]} />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.5, 0]} receiveShadow>
+          <planeGeometry args={[28, 18]} />
           <meshStandardMaterial color="#020617" />
+        </mesh>
+
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.49, 0]} receiveShadow>
+          <circleGeometry args={[16, 64]} />
+          <meshBasicMaterial color="#0f172a" transparent opacity={0.6} />
         </mesh>
 
         <OrbitControls
           enablePan={false}
+          enableZoom={false}
+          enableRotate
           dampingFactor={0.08}
-          enableZoom
-          minDistance={3}
-          maxDistance={8}
         />
+        <Stats showPanel={0} className="hidden" />
       </Canvas>
     </div>
   )
@@ -160,13 +184,13 @@ export function CubeScene() {
 function getHealthBadgeClass(health: ResourceFace["health"]) {
   switch (health) {
     case "normal":
-      return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30"
+      return "border-emerald-500/30 text-emerald-200"
     case "warning":
-      return "bg-amber-500/10 text-amber-300 border border-amber-500/30"
+      return "border-amber-500/30 text-amber-200"
     case "critical":
-      return "bg-rose-500/10 text-rose-300 border border-rose-500/30"
+      return "border-rose-500/30 text-rose-200"
     default:
-      return "bg-slate-500/10 text-slate-300 border border-slate-500/30"
+      return "border-slate-500/30 text-slate-200"
   }
 }
 
