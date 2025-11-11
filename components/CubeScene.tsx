@@ -1,14 +1,7 @@
 "use client"
 
 import { Canvas, useFrame } from "@react-three/fiber"
-import {
-  Html,
-  OrbitControls,
-  PerspectiveCamera,
-  Text,
-  Trail,
-  useCursor
-} from "@react-three/drei"
+import { Html, OrbitControls, PerspectiveCamera, Text, useCursor } from "@react-three/drei"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
 import { Vector2 } from "three"
@@ -197,9 +190,6 @@ function OrbitNode({
         onLeave()
       }}
     >
-      <Trail width={0.45} length={8} color={new THREE.Color(palette.glow)} attenuation={(t) => t * t}>
-        <mesh position={[0, 0, 0]} />
-      </Trail>
       <mesh castShadow scale={isHovered ? 1.2 : 1}>
         <sphereGeometry args={[0.7, 36, 36]} />
         <meshPhysicalMaterial
@@ -215,6 +205,10 @@ function OrbitNode({
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.9, 0]}>
         <ringGeometry args={[0.75, 0.9, 32]} />
         <meshBasicMaterial color={palette.glow} transparent opacity={0.28} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.9, 0]}>
+        <ringGeometry args={[0.6, 0.62, 64]} />
+        <meshBasicMaterial color={palette.glow} transparent opacity={0.12} />
       </mesh>
 
       {isHovered ? (
